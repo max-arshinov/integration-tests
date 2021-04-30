@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WebApplication.Data;
+using WebApplication.IdentityServerConfig;
 using WebApplication.Models;
 
 namespace WebApplication
@@ -22,7 +23,7 @@ namespace WebApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options => 
+            services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
             services
@@ -30,13 +31,9 @@ namespace WebApplication
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services
-                .AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+                .AddInMemoryIdentityServer();
+            //.AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
-            services
-                .AddAuthentication()
-                .AddIdentityServerJwt();
-            
             services.AddControllersWithViews();
             services.AddHttpClient();
             services.AddSwaggerGen();

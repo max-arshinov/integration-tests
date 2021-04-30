@@ -25,6 +25,13 @@ namespace WebApplication.Controllers
             _logger = logger;
         }
 
+        [HttpGet("Get2")]
+        [Authorize(Roles = "SomeRole")]
+        public IActionResult Get2()
+        {
+            return Ok();
+        }
+
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
