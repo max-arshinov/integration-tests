@@ -28,7 +28,7 @@ namespace WebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult ResultCreated([FromBody]Data data)
+        public IActionResult ResultCreated([FromBody]Models.Data data)
         {
             return Created("/home/1", data);
         }
@@ -47,14 +47,14 @@ namespace WebApplication.Controllers
         }
         
         [HttpPost]
-        public IActionResult PreserveMethodFrom([FromBody]Data data)
+        public IActionResult PreserveMethodFrom([FromBody]Models.Data data)
         {
             // 308
             return RedirectToActionPermanentPreserveMethod(nameof(RedirectToWithBody));
         }
 
         [HttpPost]
-        public IActionResult RedirectToWithBody([FromBody] Data data)
+        public IActionResult RedirectToWithBody([FromBody] Models.Data data)
         {
             return Ok(data);
         }

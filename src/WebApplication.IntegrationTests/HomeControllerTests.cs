@@ -19,7 +19,7 @@ namespace WebApplication.IntegrationTests
         {
             return await Client.PostAsync(
                 "Home/ResultCreated",
-                JsonContent.Create(new Data()
+                JsonContent.Create(new Models.Data()
                 {
                     A = "A",
                     B = "B"
@@ -35,7 +35,7 @@ namespace WebApplication.IntegrationTests
             Assert.NotNull(uri);
 
             var response2 = await Client.GetAsync(uri);
-            var data = await response2.Content.ReadFromJsonAsync<Data>();
+            var data = await response2.Content.ReadFromJsonAsync<Models.Data>();
             Assert.NotNull(data);
             Assert.NotNull(data.A);
             Assert.NotNull(data.B);
@@ -58,7 +58,7 @@ namespace WebApplication.IntegrationTests
         {
             var response = await Client.PostAsync(
                 "Home/ResultCreated",
-                JsonContent.Create(new Data()));
+                JsonContent.Create(new Models.Data()));
             
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -77,13 +77,13 @@ namespace WebApplication.IntegrationTests
         {
             var response = await Client.PostAsJsonAsync(
                 $"Home/{nameof(HomeController.PreserveMethodFrom)}", 
-                new Data()
+                new Models.Data()
             {
                 A = "A",
                 B = "B"
             });
 
-            var data = await response.Content.ReadFromJsonAsync<Data>();
+            var data = await response.Content.ReadFromJsonAsync<Models.Data>();
             Assert.NotNull(data);
             Assert.Equal("A", data.A);
             Assert.Equal("B", data.B);
