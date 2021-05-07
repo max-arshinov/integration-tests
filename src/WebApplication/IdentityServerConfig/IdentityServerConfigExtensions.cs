@@ -77,28 +77,27 @@ namespace WebApplication.IdentityServerConfig
                     options.Events = new JwtBearerEvents
                     {
                         OnAuthenticationFailed = OnAuthenticationFailed,
-                        OnTokenValidated =  context =>
-                        {
-                            //find by the claims in token ,for example , if type is groups
-
-
-                            var claims = new List<Claim>
-                            {
-                                new Claim("groups", "ad")
-                            };
-                            var appIdentity = new ClaimsIdentity(claims);
-
-                            context.Principal.AddIdentity(appIdentity);
-
-
-                            return Task.CompletedTask;
-                        }
+                        OnTokenValidated = OnTokenValidated
                     };
                 });
             
             return services;
         }
 
+        private static Task OnTokenValidated(TokenValidatedContext context)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim("groups", "ad")
+            };
+            var appIdentity = new ClaimsIdentity(claims);
+
+            context.Principal.AddIdentity(appIdentity);
+
+
+            return Task.CompletedTask;
+        }
+        
         private static Task OnAuthenticationFailed(AuthenticationFailedContext arg)
         {
             return Task.CompletedTask;
