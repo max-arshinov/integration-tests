@@ -1,7 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using IdentityServer4;
 using IdentityServer4.Models;
+using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using WebApplication.Extensions.Mykeels.Services;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace WebApplication.IdentityServerConfig
 {
@@ -34,28 +46,91 @@ namespace WebApplication.IdentityServerConfig
                 }
             };
         
-        public static IServiceCollection AddInMemoryIdentityServer(this IServiceCollection services)
+        public static IServiceCollection AddInMemoryIdentityServer(this IServiceCollection services, 
+            IWebHostEnvironment environment)
         {
-            services
-                .AddIdentityServer()
-                .AddDeveloperSigningCredential()        
-                //This is for dev only scenarios when you don’t have a certificate to use.
-                .AddInMemoryApiScopes(ApiScopes)
-                .AddInMemoryClients(Clients);
+            var rsa = new RsaKeyService(environment, TimeSpan.FromDays(30));
+            services.AddSingleton(_ => rsa);
             
             services
-                .AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
-                {
-                    //options.Authority = "https://localhost:5001";
+                .AddIdentityServer()
+                //This is for dev only scenarios when you don’t have a certificate to use.
+                .AddSigningCredential(
+                    rsa.GetKey(), 
+                    IdentityServerConstants.RsaSigningAlgorithm.RS256)      
+                .AddInMemoryApiScopes(ApiScopes)
+                .AddInMemoryClients(Clients);
 
-                    options.TokenValidationParameters = new TokenValidationParameters
+            services
+                .AddAuthentication()
+                .AddJwtBearer(o =>
+                {
+                    o.RequireHttpsMetadata = false;
+                    o.SaveToken = true;
+                    o.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateAudience = false
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = false,
+                        ValidateLifetime = false,
+                        RequireExpirationTime = false,
+                        RequireSignedTokens = false,
+                        SignatureValidator =
+                            delegate(string token, TokenValidationParameters parameters)
+                            {
+                                var jwt = new JwtSecurityToken(token);
+
+                                return jwt;
+                            }
                     };
                 });
+                //.AddIdentityServerJwt();
 
+            services.Configure<JwtBearerOptions>(
+                JwtBearerDefaults.AuthenticationScheme,
+                //IdentityServerJwtConstants.IdentityServerJwtBearerScheme,
+                options =>
+                {
+                    options.TokenValidationParameters.ValidateIssuer = false;
+                    options.TokenValidationParameters.ValidateAudience = false;
+                    options.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                    options.TokenValidationParameters.RequireSignedTokens = false;
+                    options.TokenValidationParameters.SignatureValidator =
+                        delegate(string token, TokenValidationParameters parameters)
+                        {
+                            var jwt = new JwtSecurityToken(token);
+
+                            return jwt;
+                        };
+                    
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = OnAuthenticationFailed,
+                        OnTokenValidated =  context =>
+                        {
+                            //find by the claims in token ,for example , if type is groups
+
+
+                            var claims = new List<Claim>
+                            {
+                                new Claim("groups", "ad")
+                            };
+                            var appIdentity = new ClaimsIdentity(claims);
+
+                            context.Principal.AddIdentity(appIdentity);
+
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+            
             return services;
+        }
+
+        private static Task OnAuthenticationFailed(AuthenticationFailedContext arg)
+        {
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using IdentityModel.Client;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -46,7 +47,8 @@ namespace WebApplication.IntegrationTests
         private async Task<TokenResponse> GetTokenResponseAsync()
         {
             var disco = await Client.GetDiscoveryDocumentAsync();
-
+            //var client = new HttpClient();
+            //client.BaseAddress = new Uri("http://localhost:5000");
             var tokenResponse = await Client.RequestClientCredentialsTokenAsync(
                 new ClientCredentialsTokenRequest
                 {

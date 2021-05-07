@@ -8,7 +8,7 @@ using WebApplication.Models;
 
 namespace WebApplication.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
@@ -17,13 +17,7 @@ namespace WebApplication.Controllers
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
-
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
+        
 
         [HttpGet("Get2")]
         [Authorize(Roles = "SomeRole")]
@@ -35,6 +29,7 @@ namespace WebApplication.Controllers
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
+            var h = User;
             var rng = new Random();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
                 {
