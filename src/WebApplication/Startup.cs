@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,7 @@ namespace WebApplication
             // services
             //     .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
             //     .AddEntityFrameworkStores<ApplicationDbContext>();
-
+            
             services
                 .AddInMemoryIdentityServer(Environment);
             //.AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
@@ -71,16 +72,16 @@ namespace WebApplication
             
             app.UseRouting();
             
-            //app.UseMySimpleAuthorization();
             app.UseAuthentication();
             app.UseIdentityServer();
             app.UseAuthorization();
-           
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}")
+                    .RequireAuthorization("Api3ZZ");
             });
         }
     }

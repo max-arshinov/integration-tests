@@ -43,16 +43,24 @@ namespace WebApplication.IntegrationTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
+        [Fact]
+        public async Task WeatherController_GetApi3_Returns200()
+        {
+            var tokenResponse = await GetTokenResponseAsync();
+            Client.SetBearerToken(tokenResponse.AccessToken);
+            var response = await Client.GetAsync("/WeatherForecast/Api3");
+            _testOutputHelper.WriteLine(await response.Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        
         private async Task<TokenResponse> GetTokenResponseAsync()
         {
             var disco = await Client.GetDiscoveryDocumentAsync();
-            //var client = new HttpClient();
-            //client.BaseAddress = new Uri("http://localhost:5000");
+
             var tokenResponse = await Client.RequestClientCredentialsTokenAsync(
                 new ClientCredentialsTokenRequest
                 {
-                    Address = disco.TokenEndpoint.Replace("http://localhost", ""),
-
+                    Address = disco.TokenEndpoint,
                     ClientId = "client",
                     ClientSecret = "secret",
                     Scope = "api1"

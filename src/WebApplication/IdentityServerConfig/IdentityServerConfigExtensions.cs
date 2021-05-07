@@ -8,6 +8,7 @@ using IdentityServer4.Models;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,7 +47,8 @@ namespace WebApplication.IdentityServerConfig
                 }
             };
         
-        public static IServiceCollection AddInMemoryIdentityServer(this IServiceCollection services, 
+        public static IServiceCollection AddInMemoryIdentityServer(
+            this IServiceCollection services, 
             IWebHostEnvironment environment)
         {
             services
@@ -59,6 +61,16 @@ namespace WebApplication.IdentityServerConfig
                 .AddAuthentication()
                 .AddJwtBearer();
 
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Api3", p => p.RequireClaim("Api3"));
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireClaim("TokenClain")
+                    .Build();
+                
+                
+            });
+            
             services.Configure<JwtBearerOptions>(
                 JwtBearerDefaults.AuthenticationScheme,
                 options =>
@@ -84,16 +96,21 @@ namespace WebApplication.IdentityServerConfig
             return services;
         }
 
+        private static AuthorizationPolicyBuilder RequireClaim(AuthorizationPolicyBuilder policy)
+        {
+            return policy.RequireClaim("Api3");
+        }
+
         private static Task OnTokenValidated(TokenValidatedContext context)
         {
             var claims = new List<Claim>
             {
-                new Claim("groups", "ad")
+                new Claim("TokenClain", "ad"),
+                new Claim("Api3", "Api3"),
             };
             var appIdentity = new ClaimsIdentity(claims);
 
             context.Principal.AddIdentity(appIdentity);
-
 
             return Task.CompletedTask;
         }

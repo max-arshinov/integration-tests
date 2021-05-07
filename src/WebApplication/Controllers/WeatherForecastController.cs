@@ -19,14 +19,15 @@ namespace WebApplication.Controllers
         };
         
 
-        [HttpGet("Get2")]
-        [Authorize(Roles = "SomeRole")]
-        public IActionResult Get2()
+        [HttpGet(nameof(Api3))]
+        [Authorize(Policy = "Api3")]
+        public IActionResult Api3()
         {
             return Ok();
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         public IEnumerable<WeatherForecast> Get()
         {
             var h = User;
