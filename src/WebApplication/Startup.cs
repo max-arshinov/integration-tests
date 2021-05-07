@@ -31,6 +31,7 @@ namespace WebApplication
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            
             // services
             //     .AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
             //     .AddEntityFrameworkStores<ApplicationDbContext>();

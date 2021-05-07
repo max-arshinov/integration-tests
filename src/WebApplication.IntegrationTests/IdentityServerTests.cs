@@ -38,7 +38,6 @@ namespace WebApplication.IntegrationTests
         {
             var tokenResponse = await GetTokenResponseAsync();
             Client.SetBearerToken(tokenResponse.AccessToken);
-            
             var response = await Client.GetAsync("/WeatherForecast");
             _testOutputHelper.WriteLine(await response.Content.ReadAsStringAsync());
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);

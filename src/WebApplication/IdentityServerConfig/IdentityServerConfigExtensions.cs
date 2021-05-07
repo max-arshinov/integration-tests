@@ -49,46 +49,18 @@ namespace WebApplication.IdentityServerConfig
         public static IServiceCollection AddInMemoryIdentityServer(this IServiceCollection services, 
             IWebHostEnvironment environment)
         {
-            var rsa = new RsaKeyService(environment, TimeSpan.FromDays(30));
-            services.AddSingleton(_ => rsa);
-            
             services
                 .AddIdentityServer()
-                //This is for dev only scenarios when you don’t have a certificate to use.
-                .AddSigningCredential(
-                    rsa.GetKey(), 
-                    IdentityServerConstants.RsaSigningAlgorithm.RS256)      
+                .AddDeveloperSigningCredential()
                 .AddInMemoryApiScopes(ApiScopes)
                 .AddInMemoryClients(Clients);
 
             services
                 .AddAuthentication()
-                .AddJwtBearer(o =>
-                {
-                    o.RequireHttpsMetadata = false;
-                    o.SaveToken = true;
-                    o.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateIssuerSigningKey = false,
-                        ValidateLifetime = false,
-                        RequireExpirationTime = false,
-                        RequireSignedTokens = false,
-                        SignatureValidator =
-                            delegate(string token, TokenValidationParameters parameters)
-                            {
-                                var jwt = new JwtSecurityToken(token);
-
-                                return jwt;
-                            }
-                    };
-                });
-                //.AddIdentityServerJwt();
+                .AddJwtBearer();
 
             services.Configure<JwtBearerOptions>(
                 JwtBearerDefaults.AuthenticationScheme,
-                //IdentityServerJwtConstants.IdentityServerJwtBearerScheme,
                 options =>
                 {
                     options.TokenValidationParameters.ValidateIssuer = false;
@@ -99,7 +71,6 @@ namespace WebApplication.IdentityServerConfig
                         delegate(string token, TokenValidationParameters parameters)
                         {
                             var jwt = new JwtSecurityToken(token);
-
                             return jwt;
                         };
                     
