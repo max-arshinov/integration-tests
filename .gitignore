@@ -16,6 +16,9 @@
 # Mono auto generated files
 mono_crash.*
 
+idea/*
+*/tempkey.jwk
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
