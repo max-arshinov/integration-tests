@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityServer4;
 using IdentityServer4.Models;
+using IdentityServer4.Test;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,7 +14,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using WebApplication.Data;
 using WebApplication.Extensions.Mykeels.Services;
+using WebApplication.Models;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace WebApplication.IdentityServerConfig
@@ -44,9 +47,46 @@ namespace WebApplication.IdentityServerConfig
 
                     // scopes that client has access to
                     AllowedScopes = { "api1" }
+                },
+                new Client
+                {
+                    ClientId = "ro.client",
+                    AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                    ClientSecrets =
+                    {
+                        new Secret("secret".Sha256())
+                    },
+                    AllowedScopes = { "api1" }
                 }
             };
-        
+
+        private static readonly List<TestUser> Users = new()
+        {
+                new TestUser
+                {
+                    SubjectId = "1",
+                    Username = "alice",
+                    Password = "password"
+                },
+                new TestUser
+                {
+                    SubjectId = "2",
+                    Username = "bob",
+                    Password = "password"
+                }
+            };
+
+        public static IServiceCollection AddIdentityServerWithApiAuthorization(
+            this IServiceCollection services)
+        {
+            services
+                .AddIdentityServer()
+                .AddDeveloperSigningCredential()
+                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+
+            return services;
+        }
+
         public static IServiceCollection AddInMemoryIdentityServer(
             this IServiceCollection services, 
             IWebHostEnvironment environment)
@@ -54,12 +94,19 @@ namespace WebApplication.IdentityServerConfig
             services
                 .AddIdentityServer()
                 .AddDeveloperSigningCredential()
+                
                 .AddInMemoryApiScopes(ApiScopes)
-                .AddInMemoryClients(Clients);
+                .AddInMemoryClients(Clients)
+                .AddTestUsers(Users);
 
+            return services;
+        }
+
+        public static void AddJwt(this IServiceCollection services)
+        {
             services
                 .AddAuthentication()
-                .AddJwtBearer();
+                .AddIdentityServerJwt();
 
             services.AddAuthorization(options =>
             {
@@ -67,12 +114,10 @@ namespace WebApplication.IdentityServerConfig
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
                     .RequireClaim("TokenClain")
                     .Build();
-                
-                
             });
-            
+
             services.Configure<JwtBearerOptions>(
-                JwtBearerDefaults.AuthenticationScheme,
+                IdentityServerJwtConstants.IdentityServerJwtBearerScheme,
                 options =>
                 {
                     options.TokenValidationParameters.ValidateIssuer = false;
@@ -85,15 +130,13 @@ namespace WebApplication.IdentityServerConfig
                             var jwt = new JwtSecurityToken(token);
                             return jwt;
                         };
-                    
+
                     options.Events = new JwtBearerEvents
                     {
                         OnAuthenticationFailed = OnAuthenticationFailed,
                         OnTokenValidated = OnTokenValidated
                     };
                 });
-            
-            return services;
         }
 
         private static AuthorizationPolicyBuilder RequireClaim(AuthorizationPolicyBuilder policy)

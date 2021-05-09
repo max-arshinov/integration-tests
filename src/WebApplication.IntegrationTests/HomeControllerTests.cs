@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.Mvc.Testing;
 using WebApplication.Controllers;
 using Xunit;
 
@@ -11,13 +9,12 @@ namespace WebApplication.IntegrationTests
 {
     public class HomeControllerTests: TestsBase
     {
-        public HomeControllerTests(WebApplicationFactory<Startup> webApplicationFactory) : base(webApplicationFactory)
-        {
-        }
+        public HomeControllerTests(MyApplicationFactory myApplicationFactory) : base(myApplicationFactory) { }
         
         private async Task<HttpResponseMessage> CreateEntityAsync()
         {
-            return await Client.PostAsync(
+            var client = await GetClient();  
+            return await client.PostAsync(
                 "Home/ResultCreated",
                 JsonContent.Create(new Models.Data()
                 {
@@ -30,11 +27,12 @@ namespace WebApplication.IntegrationTests
         [Fact]
         public async Task Created_LocationHeaderPointsToCreatedEntity()
         {
+            var client = await GetClient();  
             var response = await CreateEntityAsync();
             var uri = response.Headers.Location;
             Assert.NotNull(uri);
 
-            var response2 = await Client.GetAsync(uri);
+            var response2 = await client.GetAsync(uri);
             var data = await response2.Content.ReadFromJsonAsync<Models.Data>();
             Assert.NotNull(data);
             Assert.NotNull(data.A);
@@ -45,7 +43,8 @@ namespace WebApplication.IntegrationTests
         [Fact]
         public async Task Post_WrongContentType()
         {
-            var res = await Client.PostAsync(
+            var client = await GetClient();  
+            var res = await client.PostAsync(
                 "Home/ResultCreated",
                 new StringContent(""));
             
@@ -56,7 +55,8 @@ namespace WebApplication.IntegrationTests
         [Fact]
         public async Task PostCreatedInvalid_ReturnBadRequest()
         {
-            var response = await Client.PostAsync(
+            var client = await GetClient();  
+            var response = await client.PostAsync(
                 "Home/ResultCreated",
                 JsonContent.Create(new Models.Data()));
             
@@ -75,7 +75,8 @@ namespace WebApplication.IntegrationTests
         [Fact]
         public async Task PreserveMethodFrom_RedirectsWithBody()
         {
-            var response = await Client.PostAsJsonAsync(
+            var client = await GetClient();  
+            var response = await client.PostAsJsonAsync(
                 $"Home/{nameof(HomeController.PreserveMethodFrom)}", 
                 new Models.Data()
             {
@@ -106,7 +107,8 @@ namespace WebApplication.IntegrationTests
             string url,
             HttpStatusCode httpStatusCode)
         {
-            var response = await Client.GetAsync($"Home/{url}");
+            var client = await GetClient();  
+            var response = await client.GetAsync($"Home/{url}");
             Assert.Equal(httpStatusCode, response.StatusCode);
         }
     }

@@ -1,19 +1,18 @@
 ﻿using System.Net.Http;
-using Microsoft.AspNetCore.Mvc.Testing;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace WebApplication.IntegrationTests
 {
-    public abstract class TestsBase : IClassFixture<WebApplicationFactory<Startup>>
+    public abstract class TestsBase : IClassFixture<MyApplicationFactory>
     {
-        protected readonly WebApplicationFactory<Startup> WebApplicationFactory;
+        private readonly MyApplicationFactory _myApplicationFactory;
 
-        protected readonly HttpClient Client;
-        
-        protected TestsBase(WebApplicationFactory<Startup> webApplicationFactory)
+        protected TestsBase(MyApplicationFactory myApplicationFactory)
         {
-            WebApplicationFactory = webApplicationFactory;
-            Client = webApplicationFactory.CreateClient();
+            _myApplicationFactory = myApplicationFactory;
         }
+
+        public Task<HttpClient> GetClient() => _myApplicationFactory.GetClient();
     }
 }
