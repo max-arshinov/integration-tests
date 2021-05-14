@@ -82,8 +82,20 @@ namespace WebApplication.IdentityServerConfig
             services
                 .AddIdentityServer()
                 .AddDeveloperSigningCredential()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
-
+                // https://github.com/dotnet/aspnetcore/issues/13919
+                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>(options =>
+                {
+                    options.Clients.Add(new Client
+                    {
+                        ClientId = "WebApplication",
+                        AllowedGrantTypes = {GrantType.ResourceOwnerPassword},
+                        ClientSecrets = {new Secret("secret".Sha256())},
+                        AllowedScopes = {"api1"}
+                    });
+                    
+                    options.ApiScopes.Add(new ApiScope("api1"));
+                });
+            
             return services;
         }
 
@@ -110,7 +122,10 @@ namespace WebApplication.IdentityServerConfig
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("Api3", p => p.RequireClaim("Api3"));
+                options.AddPolicy("Api3", p =>
+                {
+                    p.RequireClaim("Api3");
+                });
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
                     .RequireClaim("TokenClain")
                     .Build();

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using IdentityModel.Client;
 using Xunit;
@@ -58,7 +59,7 @@ namespace WebApplication.IntegrationTests
         public async Task WeatherController_GetApi3_Returns200()
         {
             var client = await GetClient();
-            var tokenResponse = await GetTokenResponseAsync();
+            var tokenResponse = await GetTokenResponseWithPasswordAsync();
             client.SetBearerToken(tokenResponse.AccessToken);
             var response = await client.GetAsync("/WeatherForecast/Api3");
             _testOutputHelper.WriteLine(await response.Content.ReadAsStringAsync());
@@ -74,11 +75,16 @@ namespace WebApplication.IntegrationTests
             {
                 Address = disco.TokenEndpoint,
                 ClientId = "WebApplication",
-                // ClientSecret = "secret",
+                ClientSecret = "secret",
                 UserName = "alice",
                 Password = "P@ssW0rd123!#",
                 Scope = "api1"
             });
+
+            if (tokenResponse.IsError)
+            {
+                throw new InvalidOperationException($"{tokenResponse.Error} / {tokenResponse.ErrorDescription}");
+            }
 
             return tokenResponse;
         }
